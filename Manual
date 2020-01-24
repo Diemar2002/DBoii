@@ -13,4 +13,5 @@ v Mueve el primer elemento del stack hacia la celda que esté seleccionada.
 * Multiplica el valor de la celda seleccionada con el primer valor del stack. Posiciona el resultado en la celda seleccionada.
 
 [] Ejecuta el código que se encuentre dentro de los corchetes siempre que el valor de la celda cuando se comprueba no sea 0
-?[] Ejecuta el código que se encuentre dentro de los corchetes siempre que el valor de la celda coincida con el del stack
+?[] Ejecuta el código que se encuentre dentro de los corchetes siempre que el valor de la celda coincida con el del stack.
+
