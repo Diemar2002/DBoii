@@ -1,0 +1,16 @@
+El lenguaje consta de dos partes principales. La primera es la cinta con direcciones de memoria a las que se puede acceder de forma que cada celda tenga un número. La segunda parte es un stack en el que se pueden guardar todos los valores que se necesiten.
+
+> Mueve el cursor de la cinta hacia la derecha.
+< Mueve el cursor de la cinta hacia la izquierda.
+^ Mueve el valor seleccionado de la cinta al stack.
+v Mueve el primer elemento del stack hacia la celda que esté seleccionada.
+
+? Compara un valor con el stack, si es igual entonces ejecuta teniendo en cuenta la estructura (code | code) el primer bloque de código, de lo contrario, ejecuta el segundo bloque. Si no se quiere hacer nada cuando el valor no coincide, entonces no se tiene que seguir la estructura (code).
+
++ Suma el valor de la celda seleccionada con el primer valor del stack. Posiciona el resultado en la celda seleccionada.
+- Resta el valor de la celda seleccionada con el primer valor del stack. Posiciona el resultado en la celda seleccionada.
+/ Divide el valor de la celda seleccionada con el primer valor del stack. Posiciona el resultado en la celda seleccionada.
+* Multiplica el valor de la celda seleccionada con el primer valor del stack. Posiciona el resultado en la celda seleccionada.
+
+[] Ejecuta el código que se encuentre dentro de los corchetes siempre que el valor de la celda cuando se comprueba no sea 0
+?[] Ejecuta el código que se encuentre dentro de los corchetes siempre que el valor de la celda coincida con el del stack
