@@ -1,3 +1,3 @@
 rm interpreter
 g++ interpreter.cpp -o interpreter
-./interpreter prueba.db
+./interpreter prueba.db 250
