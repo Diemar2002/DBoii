@@ -4,9 +4,11 @@
 #include <unistd.h>
 
 #define RIBBONSIZE 32000
+#define STACKSIZE 100
+#define LOOPSTACK 100
 
 static const char instructions[] = {'>', '<', '^', 'v', '+', '-', '.', 'I', 'D', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-};
+'*', '/', '[', ']', '?'};
 
 // Funciones
 int interpret(char ord);
@@ -82,7 +84,8 @@ class Stack {
 	}
 };
 
-static Stack<int> stck(100);
+static Stack<int> stck(STACKSIZE);
+static Stack<int> loopstack(LOOPSTACK);
 
 
 int main(int argc, char* argv[]) {
@@ -162,22 +165,48 @@ inline int interpret(const char ord) {
 		std::cout << ribbon[ribbonPtr] << '\n';
 		break;
 
-	case '+': { // Suma los dos primeros valores del stack y los introduce en el stack
+	case '+': { // Operaciones básicas. Pone el resultado dentro del stack
+	case '-':
+	case '*':
+	case '/':
 		if (stck.size() < 2) break;
-		int num1 = stck.pop();
-		int num2 = stck.pop();
-		stck.push(num1 + num2);
+		int num1 = stck.pop(); // Primer número
+		int num2 = stck.pop(); // Segundo número
+
+		switch (ord) {
+			case '+':
+				stck.push(num1 + num2);
+				break;
+			case '-':
+				stck.push(num1 - num2);
+				break;
+			case '*':
+				stck.push(num1 * num2);
+				break;
+			case '/':
+				stck.push(num1 / num2);
+				break;
+		}
+
 		break;
 	}
 
-	case '-': {
-		if (stck.size() < 2) break;
-		int num1 = stck.pop();
-		int num2 = stck.pop();
-		stck.push(num1 - num2);
+	{
+		static bool comp = false;
+
+	case '[': // Inicio del bucle
+		loopstack.push(progCounter);
+		break;
+	
+	case ']': // Final del bucle
+
+		break;
+	
+	case '?': // Comprobación para el if
+		comp = true;
 		break;
 	}
-	
+
 	case '0': // Comprueba todos los números para leerlo entero
 	case '1':
 	case '2':
