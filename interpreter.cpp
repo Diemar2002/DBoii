@@ -5,16 +5,20 @@
 
 #define RIBBONSIZE 32000
 
-char instructions[] = {'>', '<', '^', 'v', '+', '-', '.', 'I', 'D'};
+static const char instructions[] = {'>', '<', '^', 'v', '+', '-', '.', 'I', 'D', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+};
 
 // Funciones
 int interpret(char ord);
 void render();
+int getNum();
 
 //Variables globales
-int progCounter = 0;
-int ribbon[RIBBONSIZE];
-int ribbonPtr = 0;
+static int progCounter = 0;
+static int ribbon[RIBBONSIZE];
+static int ribbonPtr = 0;
+static std::string code;
+static int progSize;
 
 // Stack
 template<typename T>
@@ -57,7 +61,7 @@ class Stack {
             int buff = arr[ptr];
 			arr[ptr] = 0;
 			__size --;
-            ptr --;
+            if (ptr != 0) ptr --;
 			return buff;
 		}
 		return 0;
@@ -93,7 +97,6 @@ int main(int argc, char* argv[]) {
 	} 
 
 	std::fstream src; // Código fuente sin tratar
-	std::string code;
 
 	src.open(argv[1]);
 		{
@@ -109,7 +112,7 @@ int main(int argc, char* argv[]) {
 		}
 	src.close(); // Se termina de purgar el código
 	// Ejecución del código
-	int progSize = code.length();
+	progSize = code.length();
 
 	for (progCounter = 0; progCounter < progSize; progCounter++)
 		if (interpret(code[progCounter]) != 0) {
@@ -167,6 +170,27 @@ inline int interpret(const char ord) {
 		break;
 	}
 
+	case '-': {
+		if (stck.size() < 2) break;
+		int num1 = stck.pop();
+		int num2 = stck.pop();
+		stck.push(num1 - num2);
+		break;
+	}
+	
+	case '0': // Comprueba todos los números para leerlo entero
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+		ribbon[ribbonPtr] = getNum(); // Cuando lee el número completo, entonces
+	break;
+
 	default:
 		return 1;
 		break;
@@ -199,4 +223,21 @@ inline void render() {
     }
 	std::cout << "\n\033[u";
 	
+}
+
+inline int getNum() {
+	int num = 0;
+	while (true) {
+		num *= 10;
+		char buff = code[progCounter++];
+		if ((int)buff <= 57 && (int)buff >= 48) {
+			num += ((int)buff - 48);
+		} else {
+			progCounter -= 2;
+			num /= 10;
+			break;
+		}
+	}
+	
+	return num;
 }
