@@ -5,7 +5,7 @@
 
 #define RIBBONSIZE 32000
 
-char instructions[] = {'>', '<', '^', 'v', '+', '-', '.'};
+char instructions[] = {'>', '<', '^', 'v', '+', '-', '.', 'I', 'D'};
 
 // Funciones
 int interpret(char ord);
@@ -88,7 +88,8 @@ int main(int argc, char* argv[]) {
 	if (argc == 3) { // Activa el modo debug si al programa se le pasa un número después del nombre del archivo.
 		debug = true;
 		delay = atoi(argv[2]);
-		std::cout << "\033[2J\033[1;1H";
+		std::cout.flush();
+		std::cout << "\033[2J\033[1;4f\n\n";
 	} 
 
 	std::fstream src; // Código fuente sin tratar
@@ -105,14 +106,13 @@ int main(int argc, char* argv[]) {
 				}
 			}
 		}
-		std::cout << code << '\n';
 		}
 	src.close(); // Se termina de purgar el código
 	// Ejecución del código
 	int progSize = code.length();
 
-	for (int i = 0; i < progSize; i++)
-		if (interpret(code[i]) != 0) {
+	for (progCounter = 0; progCounter < progSize; progCounter++)
+		if (interpret(code[progCounter]) != 0) {
 			std::cout << "Ha sudecido un problema durante la ejecución del programa\n";
 			return 1;
 		} else {
@@ -144,20 +144,28 @@ inline int interpret(const char ord) {
 		break;
 	
 	case 'v': // Elimina un número del stack y lo pone en la celda seleccionada
-		ribbon[ribbonPtr + 1] = stck.pop();
+		ribbon[ribbonPtr] = stck.pop();
 		break;
 
-	case '+': // Suma uno a la celda seleccionada
+	case 'I': // Suma uno a la celda seleccionada
 		ribbon[ribbonPtr] ++;
 		break;
 	
-	case '-': // Resta uno a la celda seleccionada
+	case 'D': // Resta uno a la celda seleccionada
 		ribbon[ribbonPtr] --;
 		break;
 
 	case '.': // Muestra el valor de la celda en pantalla
-		std::cout << ribbon[ribbonPtr + 1] << '\n';
+		std::cout << ribbon[ribbonPtr] << '\n';
 		break;
+
+	case '+': { // Suma los dos primeros valores del stack y los introduce en el stack
+		if (stck.size() < 2) break;
+		int num1 = stck.pop();
+		int num2 = stck.pop();
+		stck.push(num1 + num2);
+		break;
+	}
 
 	default:
 		return 1;
@@ -174,8 +182,7 @@ inline int interpret(const char ord) {
 
 inline void render() {
 	std::cout.flush();
-	std::cout << "\033[s"; // Limpia la pantalla y establece el cursor en la posición inicial
-
+	std::cout << "\033[s\033[1;1f\033[2K"; // Limpia la pantalla y establece el cursor en la posición inicial
 	// Renderizado del stack
 	int stackSize = stck.size();
 	for (int i = 0; i < STACKDISPKAY; i++) {
@@ -184,14 +191,12 @@ inline void render() {
 	}
 
 	//Renderizado de la cinta
-	std::cout << "\033[s\033[1J\033[1;1f";
-	int startpos = (ribbonPtr < (RIBBONDISPLAY / 2) ? 0:(ribbonPtr - RIBBONDISPLAY / 2));
-	for (int i = 0; i < RIBBONDISPLAY; i++) {
-		if ((i + startpos) >= RIBBONSIZE) break;
-		if (i + startpos == ribbonPtr) std::cout << "\033[33m";
-		std::cout << ribbon[ribbonPtr + i] << "\033[0m ";
-	}
-
-	std::cout << "\033[u";
+	std::cout << "\033[E";
+	int from = (ribbonPtr < RIBBONDISPLAY/2 ? 0:(ribbonPtr-RIBBONDISPLAY/2));
+    for (int i = 0; i<RIBBONDISPLAY; i++) {
+        bool isptr = (i+from == ribbonPtr);
+        std::cout << (isptr ? "\033[93m":"") << ribbon[i+from] << " " << (isptr ? "\033[0m":"");
+    }
+	std::cout << "\n\033[u";
 	
 }
