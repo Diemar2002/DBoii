@@ -8,12 +8,13 @@
 #define LOOPSTACK 100
 
 static const char instructions[] = {'>', '<', '^', 'v', '+', '-', '.', 'I', 'D', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-'*', '/', '[', ']', '?'};
+'*', '/', '[', ']', '?', '(', ')', '|'};
 
 // Funciones
 int interpret(char ord);
 void render();
 int getNum();
+void gotoNextBlock(const int mode);
 
 //Variables globales
 static int progCounter = 0;
@@ -192,7 +193,7 @@ inline int interpret(const char ord) {
 	}
 
 	{
-		static bool comp = false;
+		static Stack<bool> comp(LOOPSTACK);
 
 	case '[': // Inicio del bucle
 		loopstack.push(progCounter);
@@ -201,11 +202,45 @@ inline int interpret(const char ord) {
 	case ']': // Final del bucle
 
 		break;
-	
-	case '?': // Comprobación para el if
-		comp = true;
+
+	case '(': { // Inicio de un bloque de código
+
+		bool comparation = false;
+
+		if ((progCounter - 1) < 0) { // Comprueba si puede existir alguna instrucción detrás de la actual
+			if (ribbon[ribbonPtr] == 0) comparation = true; // Si no existe comprueba que el valor actual de la cinta no sea 0
+		} else {
+			if (code[progCounter - 1] == '?') { // Si anteriormente hay '?' entonces comprueba si el valor de la celda coincide con el primero del stack principal
+				if (ribbon[ribbonPtr] == stck.peek())
+					comparation = true;
+			} else if (ribbon[ribbonPtr] == 0) // De lo contrario comprueba si el valor de la celda no es 0
+				comparation = true;
+		}
+
+		comp.push(comparation);
+
+		if (!comparation)
+			gotoNextBlock(0);
+		
 		break;
 	}
+
+	case '|': // Caracter para marcar un else
+		if ((progCounter - 1) < 0) break;
+		if (code[progCounter - 1] != ')') break;
+
+		if (!comp.pop()) gotoNextBlock(0); // Si no se ejecutó el bucle entonces salta al siguiente bloque
+
+		break;
+
+	case ')': // Cierra la comparación
+		if ((progCounter + 1) >= progSize) break;
+		if (code[progCounter + 1] != '|')
+			if (comp.size() > 0) comp.pop();
+		break;
+
+	}
+
 
 	case '0': // Comprueba todos los números para leerlo entero
 	case '1':
@@ -269,4 +304,32 @@ inline int getNum() {
 	}
 	
 	return num;
+}
+
+void gotoNextBlock(const int mode) {
+	char open = 0, close = 0;
+	if (mode == 0) { // Comparación
+		open = '(';
+		close = ')';
+	} else if (mode == 1) { // Bucle
+		open = '[';
+		close = ']';
+	}
+
+	if (open == 0 || close == 0) return;
+
+	int cnt = 0; // Varable que cuenta el número de veces que se han abierto paréntesis para saber el nivel del paréntesis de cierre
+			while (true) { // Salta hasta el siguiente ')' que esté en su nivel
+			char buff = code[progCounter++];
+				if (buff == open)
+					cnt ++;
+				else if (buff == close) {
+					cnt --;
+					if (cnt <= 0) {
+						progCounter --;
+						break;
+					}
+				}
+			}
+
 }
