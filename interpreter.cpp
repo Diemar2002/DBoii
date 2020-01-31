@@ -8,7 +8,7 @@
 #define LOOPSTACK 100
 
 static const char instructions[] = {'>', '<', '^', 'v', '+', '-', '.', 'I', 'D', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-'*', '/', '[', ']', '?', '(', ')', '|'};
+'*', '/', '[', ']', '?', '(', ')', '|', '%', '?'};
 
 // Funciones
 int interpret(char ord);
@@ -22,6 +22,7 @@ static int ribbon[RIBBONSIZE];
 static int ribbonPtr = 0;
 static std::string code;
 static int progSize;
+static bool doDelay = true;
 
 // Stack
 template<typename T>
@@ -87,6 +88,7 @@ class Stack {
 
 static Stack<int> stck(STACKSIZE);
 static Stack<int> loopstack(LOOPSTACK);
+static Stack<int> comp(LOOPSTACK);
 
 
 int main(int argc, char* argv[]) {
@@ -118,16 +120,18 @@ int main(int argc, char* argv[]) {
 	// Ejecución del código
 	progSize = code.length();
 
-	for (progCounter = 0; progCounter < progSize; progCounter++)
-		if (interpret(code[progCounter]) != 0) {
-			std::cout << "Ha sudecido un problema durante la ejecución del programa\n";
+	for (progCounter = 0; progCounter < progSize; progCounter++) { // Bucle principal que ejecuta el programa
+		doDelay = true;
+		if (interpret(code[progCounter]) != 0) { // Ejecuta la instrucción y espera algún error
+			std::cout << "Ha ocurrido un error en la línea: " << progCounter << ' ' << code[progCounter];
 			return 1;
 		} else {
-			if (debug) {
+			if (debug) { // Si el debug está activado, entonces muestra el stack y la cinta
 				render();
-				usleep(delay * 1000);
+				if (doDelay) usleep(delay * 1000);
 			}
 		}
+	}
 
 	return 0;
 }
@@ -170,6 +174,7 @@ inline int interpret(const char ord) {
 	case '-':
 	case '*':
 	case '/':
+	case '%':
 		if (stck.size() < 2) break;
 		int num1 = stck.pop(); // Primer número
 		int num2 = stck.pop(); // Segundo número
@@ -187,23 +192,39 @@ inline int interpret(const char ord) {
 			case '/':
 				stck.push(num1 / num2);
 				break;
+			case '%':
+				stck.push(num1 % num2); 
+				break;
 		}
 
 		break;
 	}
 
 	{
-		static Stack<bool> comp(LOOPSTACK);
 
 	case '[': // Inicio del bucle
-		loopstack.push(progCounter);
+		doDelay = false;
+
+		loopstack.push(progCounter-1); // Añade el bucle al bucle principal
+
+		if ((progCounter - 1) >= 0) {
+			if (code[progCounter - 1] == '?') {
+				if (ribbon[ribbonPtr] == stck.peek())
+					gotoNextBlock(1);
+			} else if (ribbon[ribbonPtr] == 0)
+				gotoNextBlock(1);
+		}
+
 		break;
 	
 	case ']': // Final del bucle
-
+		doDelay = false;
+		
+		if (loopstack.size() > 0) progCounter = loopstack.pop();
 		break;
 
 	case '(': { // Inicio de un bloque de código
+		doDelay = false;
 
 		bool comparation = false;
 
@@ -226,14 +247,21 @@ inline int interpret(const char ord) {
 	}
 
 	case '|': // Caracter para marcar un else
-		if ((progCounter - 1) < 0) break;
-		if (code[progCounter - 1] != ')') break;
+		doDelay = false;
 
-		if (!comp.pop()) gotoNextBlock(0); // Si no se ejecutó el bucle entonces salta al siguiente bloque
+		if ((progCounter - 1) < 0 || (progCounter + 1) >= progSize) break;
+		if (code[progCounter - 1] != ')' || code[progCounter + 1] != '(') break;
 
+		if (comp.size() > 0) {
+			bool c = comp.pop();
+			progCounter ++;
+			if (c) gotoNextBlock(0); // Si no se ejecutó el bucle entonces salta al siguiente bloque
+		}
 		break;
 
 	case ')': // Cierra la comparación
+		doDelay = false;
+
 		if ((progCounter + 1) >= progSize) break;
 		if (code[progCounter + 1] != '|')
 			if (comp.size() > 0) comp.pop();
@@ -241,6 +269,9 @@ inline int interpret(const char ord) {
 
 	}
 
+	case '?':
+		doDelay = false;
+		break;
 
 	case '0': // Comprueba todos los números para leerlo entero
 	case '1':
@@ -256,7 +287,7 @@ inline int interpret(const char ord) {
 	break;
 
 	default:
-		return 1;
+		doDelay = false;
 		break;
 	}
 
