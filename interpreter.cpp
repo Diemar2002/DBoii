@@ -8,7 +8,7 @@
 #define LOOPSTACK 100
 
 static const char instructions[] = {'>', '<', '^', 'v', '+', '-', '.', 'I', 'D', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-'*', '/', '[', ']', '?', '(', ')', '|', '%', '?', ','};
+'*', '/', '[', ']', '?', '(', ')', '|', '%', '?', ',', '"'};
 
 // Funciones
 int interpret(char ord);
@@ -108,10 +108,12 @@ int main(int argc, char* argv[]) {
 	src.open(argv[1]);
 		{
 		char buff;
+		bool print = false;
 		while (src.get(buff)) { // Lee el archivo entero
 			for (char o : instructions) { // Comprueba si es alguna de las instrucciones
-				if (o == buff) {
+				if (o == buff || print) {
 					code += buff; // Si la encuentra añade la instrucción al buffer
+					if (o == '\"') print = !print;
 					break;
 				}
 			}
@@ -176,6 +178,7 @@ inline int interpret(const char ord) {
 
 		char buff[100];
 		std::cin.get(buff, 100);
+		std::cin.ignore();
 		
 		// Comprobar si la entrada es un número
 		bool num = true;
@@ -299,6 +302,17 @@ inline int interpret(const char ord) {
 
 	case '?':
 		doDelay = false;
+		break;
+
+	case '\"': // Imprime en pantalla
+		progCounter ++;
+		while (true) {
+			char buff = code[progCounter++];
+			if (buff == '\"') break;
+		
+			std::cout << buff;
+		}
+		std::cout << '\n';
 		break;
 
 	case '0': // Comprueba todos los números para leerlo entero

@@ -1,0 +1,6 @@
+"Introduce el primer numero"
+,^
+"Intruduce el segundo numero"
+,^+v
+"El resultado es"
+.
