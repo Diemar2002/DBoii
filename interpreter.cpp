@@ -8,13 +8,14 @@
 #define LOOPSTACK 100
 
 static const char instructions[] = {'>', '<', '^', 'v', '+', '-', '.', 'I', 'D', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-'*', '/', '[', ']', '?', '(', ')', '|', '%', '?'};
+'*', '/', '[', ']', '?', '(', ')', '|', '%', '?', ','};
 
 // Funciones
 int interpret(char ord);
 void render();
 int getNum();
 void gotoNextBlock(const int mode);
+int charlen(const char arr[]);
 
 //Variables globales
 static int progCounter = 0;
@@ -169,6 +170,33 @@ inline int interpret(const char ord) {
 	case '.': // Muestra el valor de la celda en pantalla
 		std::cout << ribbon[ribbonPtr] << '\n';
 		break;
+
+	case ',': {// Permite al usuario introducir texto o números
+		doDelay = false;
+
+		char buff[100];
+		std::cin.get(buff, 100);
+		
+		// Comprobar si la entrada es un número
+		bool num = true;
+		for (char c : buff) {
+			if (c == '\0') break;
+			if (c < 48 || c > 57) {
+				num = false;
+				break;
+			}
+		}
+
+		if (num) {
+			ribbon[ribbonPtr] = std::atoi(buff);
+		} else {
+			int end = charlen(buff) + ribbonPtr;
+			for (int i = ribbonPtr; i < end; i++)
+				ribbon[i] = buff[i - ribbonPtr];
+		}
+
+		break;
+	}
 
 	case '+': { // Operaciones básicas. Pone el resultado dentro del stack
 	case '-':
@@ -363,4 +391,12 @@ void gotoNextBlock(const int mode) {
 				}
 			}
 
+}
+
+int charlen(const char arr[]) {
+	int cnt = 0;
+	while (true) {
+		if (arr[cnt] == '\0') return cnt;
+		cnt ++;
+	}
 }
