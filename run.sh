@@ -1,1 +1,1 @@
-./interpreter separate.db 250
+./interpreter prueba.db 250

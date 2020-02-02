@@ -8,7 +8,7 @@
 #define LOOPSTACK 100
 
 static const char instructions[] = {'>', '<', '^', 'v', '+', '-', '.', 'I', 'D', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-'*', '/', '[', ']', '?', '(', ')', '|', '%', '?', ',', '"', '#', '\n', '=', 'G', 'L'};
+'*', '/', '[', ']', '?', '(', ')', '|', '%', '?', ',', '"', '#', '\n', '=', 'G', 'L', '!'};
 
 // Funciones
 int interpret(char ord);
@@ -82,7 +82,7 @@ class Stack {
 		return 0;
 	}
 
-	T operator[](const int dir) {
+	T& operator[](const int dir) {
 		return arr[dir];
 	}
 
@@ -360,6 +360,17 @@ inline int interpret(const char ord) {
 		progCounter ++;
 		int num = getNum() - 1;
 		if (num >= 0 && num < RIBBONSIZE) ribbonPtr = num;
+		break;
+	}
+
+	case '!': { // Invierte el stack
+		int steps = stck.size() / 2;
+		for (int i = 0; i < steps; i++) {
+			int buff_1 = stck[i];
+			int buff_2 = stck[stck.size() - i - 1];
+			stck[i] = buff_2;
+			stck[stck.size() - i - 1] = buff_1;
+		}
 		break;
 	}
 
