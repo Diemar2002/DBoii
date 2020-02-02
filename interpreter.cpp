@@ -280,6 +280,7 @@ inline int interpret(const char ord) {
 
 	case '(': { // Inicio de un bloque de código
 		doDelay = false;
+		f_comparing = true;
 
 		bool comparation = false;
 
