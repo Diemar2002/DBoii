@@ -8,7 +8,7 @@
 #define LOOPSTACK 100
 
 static const char instructions[] = {'>', '<', '^', 'v', '+', '-', '.', 'I', 'D', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-'*', '/', '[', ']', '?', '(', ')', '|', '%', '?', ','};
+'*', '/', '[', ']', '?', '(', ')', '|', '%', '?', ',', '"', '#', '\n', '=', 'G', 'L', '!'};
 
 // Funciones
 int interpret(char ord);
@@ -27,6 +27,7 @@ static bool doDelay = true;
 
 // Flags
 static bool f_comparing = false;
+static bool f_operating = false;
 
 // Stack
 template<typename T>
@@ -81,7 +82,7 @@ class Stack {
 		return 0;
 	}
 
-	T operator[](const int dir) {
+	T& operator[](const int dir) {
 		return arr[dir];
 	}
 
@@ -93,6 +94,7 @@ class Stack {
 static Stack<int> stck(STACKSIZE);
 static Stack<int> loopstack(LOOPSTACK);
 static Stack<int> comp(LOOPSTACK);
+static Stack<int> compMode(LOOPSTACK);
 
 
 int main(int argc, char* argv[]) {
@@ -108,13 +110,17 @@ int main(int argc, char* argv[]) {
 
 	std::fstream src; // Código fuente sin tratar
 
+	render(); // Primer renderizado
+
 	src.open(argv[1]);
 		{
 		char buff;
+		bool print = false;
 		while (src.get(buff)) { // Lee el archivo entero
 			for (char o : instructions) { // Comprueba si es alguna de las instrucciones
-				if (o == buff) {
+				if (o == buff || print) {
 					code += buff; // Si la encuentra añade la instrucción al buffer
+					if (o == '\"') print = !print;
 					break;
 				}
 			}
@@ -127,6 +133,8 @@ int main(int argc, char* argv[]) {
 	for (progCounter = 0; progCounter < progSize; progCounter++) { // Bucle principal que ejecuta el programa
 		doDelay = true;
 		f_comparing = false;
+		f_operating = false;
+
 		if (interpret(code[progCounter]) != 0) { // Ejecuta la instrucción y espera algún error
 			std::cout << "Ha ocurrido un error en la línea: " << progCounter << ' ' << code[progCounter];
 			return 1;
@@ -180,6 +188,7 @@ inline int interpret(const char ord) {
 
 		char buff[100];
 		std::cin.get(buff, 100);
+		std::cin.ignore();
 		
 		// Comprobar si la entrada es un número
 		bool num = true;
@@ -207,25 +216,36 @@ inline int interpret(const char ord) {
 	case '*':
 	case '/':
 	case '%':
+		if (ord == '-') {
+			if ((progCounter + 1) >= progSize) goto notNumber;
+			else if ((code[progCounter + 1] >= 48) && (code[progCounter + 1] <= 57)) {
+				ribbon[ribbonPtr] = getNum();
+				break;
+			}
+		}
+		notNumber:
 		if (stck.size() < 2) break;
+
+		f_operating = true;
+		
 		int num1 = stck.pop(); // Primer número
 		int num2 = stck.pop(); // Segundo número
 
 		switch (ord) {
 			case '+':
-				stck.push(num1 + num2);
+				stck.push(num2 + num1);
 				break;
 			case '-':
-				stck.push(num1 - num2);
+				stck.push(num2 - num1);
 				break;
 			case '*':
-				stck.push(num1 * num2);
+				stck.push(num2 * num1);
 				break;
 			case '/':
-				stck.push(num1 / num2);
+				stck.push(num2 / num1);
 				break;
 			case '%':
-				stck.push(num1 % num2); 
+				stck.push(num2 % num1); 
 				break;
 		}
 
@@ -233,16 +253,18 @@ inline int interpret(const char ord) {
 	}
 
 	{
-
 	case '[': // Inicio del bucle
-		doDelay = false;
 		f_comparing = true;
 
 		loopstack.push(progCounter-1); // Añade el bucle al bucle principal
 
 		if ((progCounter - 1) >= 0) {
 			if (code[progCounter - 1] == '?') {
-				if (ribbon[ribbonPtr] == stck.peek())
+				if ((compMode.peek() == 1) && !(stck.peek() > ribbon[ribbonPtr]))
+					gotoNextBlock(1);
+				else if ((compMode.peek() == 2) && !(stck.peek() < ribbon[ribbonPtr]))
+					gotoNextBlock(1);
+				else if ((compMode.peek() != 0) && (stck.peek() == ribbon[ribbonPtr]))
 					gotoNextBlock(1);
 			} else if (ribbon[ribbonPtr] == 0)
 				gotoNextBlock(1);
@@ -266,7 +288,11 @@ inline int interpret(const char ord) {
 			if (ribbon[ribbonPtr] == 0) comparation = true; // Si no existe comprueba que el valor actual de la cinta no sea 0
 		} else {
 			if (code[progCounter - 1] == '?') { // Si anteriormente hay '?' entonces comprueba si el valor de la celda coincide con el primero del stack principal
-				if (ribbon[ribbonPtr] == stck.peek())
+				if ((compMode.peek() == 1) && (stck.peek() > ribbon[ribbonPtr]))
+					comparation = true;
+				else if ((compMode.peek() == 2) && (stck.peek() < ribbon[ribbonPtr]))
+					comparation = true;
+				else if ((compMode.peek() == 0) && (stck.peek() == ribbon[ribbonPtr]))
 					comparation = true;
 			} else if (ribbon[ribbonPtr] == 0) // De lo contrario comprueba si el valor de la celda no es 0
 				comparation = true;
@@ -274,8 +300,10 @@ inline int interpret(const char ord) {
 
 		comp.push(comparation);
 
-		if (!comparation)
+		if (!comparation) {
+			compMode.pop();
 			gotoNextBlock(0);
+		}
 		
 		break;
 	}
@@ -301,11 +329,51 @@ inline int interpret(const char ord) {
 			if (comp.size() > 0) comp.pop();
 		break;
 
+	case '?': { // Inicio de la comparación. Establece el modo en el que se hacen las comparacinoes
+		if ((progCounter - 1) < 0) break;
+		int mode = 0;
+		if (code[progCounter - 1] == 'G') mode = 1;
+		else if (code[progCounter - 1] == 'L') mode = 2;
+		compMode.push(mode);
+		f_comparing = true;
+		break;
 	}
 
-	case '?':
-		doDelay = false;
+	}
+
+	case '\"': // Imprime en pantalla
+		progCounter ++;
+		while (true) {
+			char buff = code[progCounter++];
+			if (buff == '\"') {
+				progCounter --;
+				break;
+			}
+		
+			std::cout << buff;
+		}
+		std::cout << '\n';
 		break;
+
+	case '#': { // Mueve la celda a la posición indicada
+		if (progCounter + 1 >= progSize) break;
+		if ((code[progCounter + 1] < 48) || (code[progCounter] > 57)) break;
+		progCounter ++;
+		int num = getNum() - 1;
+		if (num >= 0 && num < RIBBONSIZE) ribbonPtr = num;
+		break;
+	}
+
+	case '!': { // Invierte el stack
+		int steps = stck.size() / 2;
+		for (int i = 0; i < steps; i++) {
+			int buff_1 = stck[i];
+			int buff_2 = stck[stck.size() - i - 1];
+			stck[i] = buff_2;
+			stck[stck.size() - i - 1] = buff_1;
+		}
+		break;
+	}
 
 	case '0': // Comprueba todos los números para leerlo entero
 	case '1':
@@ -331,27 +399,31 @@ inline int interpret(const char ord) {
 }
 
 #define RIBBONDISPLAY 10
-#define STACKDISPKAY 10
+#define STACKDISPLAY 10
 
 inline void render() {
 	std::cout.flush();
 	std::cout << "\033[s\033[1;1f\033[2K"; // Limpia la pantalla y establece el cursor en la posición inicial
 	// Renderizado del stack
 	int stackSize = stck.size();
-	for (int i = 0; i < STACKDISPKAY; i++) {
+	int from = (stackSize < STACKDISPLAY ? 0:(stackSize-STACKDISPLAY));
+	for (int i = 0; i < STACKDISPLAY; i++) {
 		if (i >= stackSize) break;
-		std::cout << stck[i] << ' ';
+		if (((from + i) == (stackSize - 1)) && f_comparing) std::cout << "\033[94m";
+		if (((from + i) == (stackSize - 1)) && f_operating) std::cout << "\033[92m";
+		std::cout << stck[from + i] << " \033[0m";
 	}
 
 	//Renderizado de la cinta
 	std::cout << "\033[E";
-	int from = (ribbonPtr < RIBBONDISPLAY/2 ? 0:(ribbonPtr-RIBBONDISPLAY/2));
+	from = (ribbonPtr < RIBBONDISPLAY/2 ? 0:(ribbonPtr-RIBBONDISPLAY/2));
     for (int i = 0; i<RIBBONDISPLAY; i++) {
         bool isptr = (i+from == ribbonPtr);
 		if (isptr) {
-			if (f_comparing) std::cout << "\033[36m";
+			std::cout << "\033[93m";
+			if (f_comparing) std::cout << "\033[94m";
 		}
-        std::cout << (isptr ? "\033[93m":"") << ribbon[i+from] << " " << (isptr ? "\033[0m":"");
+        std::cout << ribbon[i+from] << " " << (isptr ? "\033[0m":"");
     }
 	std::cout << "\n\033[u";
 	
@@ -359,9 +431,14 @@ inline void render() {
 
 inline int getNum() {
 	int num = 0;
+	bool negative = false;
 	while (true) {
 		num *= 10;
 		char buff = code[progCounter++];
+		if (buff == '-' && !negative) {
+			negative = true;
+			buff = code[progCounter++];
+		}
 		if ((int)buff <= 57 && (int)buff >= 48) {
 			num += ((int)buff - 48);
 		} else {
@@ -371,7 +448,7 @@ inline int getNum() {
 		}
 	}
 	
-	return num;
+	return (negative ? -num:num);
 }
 
 void gotoNextBlock(const int mode) {

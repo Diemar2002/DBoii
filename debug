@@ -1,2 +1,2 @@
 g++ -g interpreter.cpp -o interpreter
-gdb -q --args ./interpreter prueba.db
+gdb -q --args ./interpreter prueba.db 0
