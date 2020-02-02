@@ -25,6 +25,9 @@ static std::string code;
 static int progSize;
 static bool doDelay = true;
 
+// Flags
+static bool f_comparing = false;
+
 // Stack
 template<typename T>
 class Stack {
@@ -123,6 +126,7 @@ int main(int argc, char* argv[]) {
 
 	for (progCounter = 0; progCounter < progSize; progCounter++) { // Bucle principal que ejecuta el programa
 		doDelay = true;
+		f_comparing = false;
 		if (interpret(code[progCounter]) != 0) { // Ejecuta la instrucción y espera algún error
 			std::cout << "Ha ocurrido un error en la línea: " << progCounter << ' ' << code[progCounter];
 			return 1;
@@ -232,6 +236,7 @@ inline int interpret(const char ord) {
 
 	case '[': // Inicio del bucle
 		doDelay = false;
+		f_comparing = true;
 
 		loopstack.push(progCounter-1); // Añade el bucle al bucle principal
 
@@ -253,6 +258,7 @@ inline int interpret(const char ord) {
 
 	case '(': { // Inicio de un bloque de código
 		doDelay = false;
+		f_comparing = true;
 
 		bool comparation = false;
 
@@ -342,6 +348,9 @@ inline void render() {
 	int from = (ribbonPtr < RIBBONDISPLAY/2 ? 0:(ribbonPtr-RIBBONDISPLAY/2));
     for (int i = 0; i<RIBBONDISPLAY; i++) {
         bool isptr = (i+from == ribbonPtr);
+		if (isptr) {
+			if (f_comparing) std::cout << "\033[36m";
+		}
         std::cout << (isptr ? "\033[93m":"") << ribbon[i+from] << " " << (isptr ? "\033[0m":"");
     }
 	std::cout << "\n\033[u";
