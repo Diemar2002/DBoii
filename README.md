@@ -1,7 +1,7 @@
 # DBoii
 My first esotheric programming lenguaje. It's based on Brainfuck but with greather functionality. It has two main parts. The first is the memory ribbon in which signed integer numbers can be stored. The second part is the stack. This stack can be accessed from anywhere in the program and it can also store signed integer numbers.
 ## Manual
-### These instructions control the stack and ribbon pointer.
+### Stack and ribbon pointer controllers.
 
 - ```<``` Moves the ribbon pointer to the left.
 - ```>``` Moves the ribbon pointer to the right.
@@ -14,7 +14,7 @@ My first esotheric programming lenguaje. It's based on Brainfuck but with greath
 - ```^``` Pushes the currently selected ribbon number to the stack. This operations doesn't modify the cell.
 - ```v``` Pops the first element from the stack to the currently selected cell on the ribbon.
 
-###  These instructions modify directly the values on the cells.
+###  Direct modification of the values of the cells.
 
 - ```42``` Puts the number into the current cell. It can be any number even negatives.
 - ```I``` Increments the current cell value by 1.
@@ -22,7 +22,7 @@ My first esotheric programming lenguaje. It's based on Brainfuck but with greath
 
 ```512II``` Puts 512 on the current cell and increments the value by 1 two times. The final value is 514.
 
-### These instructions manage the IO.
+### IO.
 
 - ```,``` Asks the user for input. The input can be integers or text. When it's a number the program directly puts the inserted value into the current cell. If it's text then the ASCII values are put into adjacent cells.
 - ```.``` Outputs the current cell value into the terminal.
@@ -30,4 +30,15 @@ My first esotheric programming lenguaje. It's based on Brainfuck but with greath
 
 ### Math
 
-- ```
+- ```+``` Adds the two first numbers on the stack and puts the result on the stack.
+- ```-``` Subtracts the two first numbers on the stack and puts the result on the stack.
+- ```*``` Multiplies the two first numbers on the stack and puts the result on the stack.
+- ```/``` Divides the two first numbers on the stack and puts the result on the stack.
+- ```%``` Applies the modulo operation the two first numbers on the stack and puts the result on the stack.
+
+### Flow modifiers
+
+- ```(...)``` If statement. To add an else the statement this syntax has to be used ```("if")|("else")
+- ```[...]``` Loop statement. 
+
+To controll all the 
