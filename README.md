@@ -1,5 +1,13 @@
 # DBoii
 My first esotheric programming lenguaje. It's based on Brainfuck but with greather functionality. It has two main parts. The first is the memory ribbon in which signed integer numbers can be stored. The second part is the stack. This stack can be accessed from anywhere in the program and it can also store signed integer numbers.
+## Getting started
+The main file is ```interpreter.cpp```. To compile it execute ```g++ interpreter.cpp -o interpreter``` on the terminal. With the compiled to execute a ```.db``` file the fillowing structure has to be used.
+
+```./interpreter file.db 50```
+- ```./interpreter``` interpreter.
+- ```file.db``` file to execute.
+- ```50``` delay between instructions. It also activates the debug option, where memory information can be seen.
+
 ## Manual
 ### Stack and ribbon pointer controllers.
 
@@ -41,4 +49,40 @@ My first esotheric programming lenguaje. It's based on Brainfuck but with greath
 - ```(...)``` If statement. To add an else the statement this syntax has to be used ```("if")|("else")
 - ```[...]``` Loop statement. 
 
-To controll all the 
+To use conditionals the following structures have to be used.
+-```(...)``` Executes the inside code if the value on the current cell is not zero.
+-```?(...)``` Basic conditionals. The default value is =.
+  - ```=?(...)``` Checks if the value on the current cell is equal to the first value on the stack.
+  - ```G?(...)``` Checks if the value on the stack is greater than the value on the current cell.
+  - ```L?(...)``` Checks if the first value on the stack is lower than the value on the current cell.
+
+These rules can also be applied to the loop statement.
+
+### Miscellaneous
+
+- ```!``` Reverses the stack.
+- ```\n``` The carriage return character can be used as a separation between instructions. This can avoid unpredictable behaviour.
+- ```abcdefghijklmnopqrstuvwxyz``` All the keys that aren't listed here can be used as comments. Thus they'll be ignored by the interpreter.
+
+```
+47^32^-
+34
+```
+The output value on the cell will be 34. And the only value on the stack will be 15. This is the solution to this problem.
+```
+47^32^-34
+```
+The output on the cell will be -34 and the values on the stack will be 47 and 32. As seen here the ```\n``` character can be used as a code separator.
+
+### Code examples
+```"Hello world!"``` Prints the typical hello world on the console.
+```1>1..>10^0?[<^^<^>+v<v>.>I]``` Prints indifenitely the fibbonacci's series.
+```
+"Type the number"
+,[^>10^%<^>^/<v#4I#1]
+"The separate numbers are: "
+#4[D<v.>]
+```
+Prints the separated characters of an input. Ex: 1514 -> 1 5 1 4.
+This github has all the test files used in the examples.
+
