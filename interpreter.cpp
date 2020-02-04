@@ -101,16 +101,15 @@ int main(int argc, char* argv[]) {
 	if (argc == 1) return 1;
 	bool debug = false; // Maneja el modo debug
 	unsigned int delay = 0; // Tiempo entre instrucciones dentro del modo debug
-	if (argc == 3) { // Activa el modo debug si al programa se le pasa un número después del nombre del archivo.
+	if (argc == 3) { // Activa el modo debug si al programa se le pasa un número después del nombre del archivo
 		debug = true;
 		delay = atoi(argv[2]);
 		std::cout.flush();
 		std::cout << "\033[2J\033[1;4f\n\n";
+		render(); // Primer renderizado
 	} 
 
 	std::fstream src; // Código fuente sin tratar
-
-	render(); // Primer renderizado
 
 	src.open(argv[1]);
 		{
