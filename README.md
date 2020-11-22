@@ -1,5 +1,5 @@
 # DBoii
-My first esotheric programming lenguaje. It's based on Brainfuck but with greather functionality. It has two main parts. The first is the memory ribbon in which signed integer numbers can be stored. The second part is the stack. This stack can be accessed from anywhere in the program and it can also store signed integer numbers.
+My first esotheric programming lenguaje. It's based on Brainfuck but with greater functionality. It has two main parts. The first is the memory ribbon in which signed integer numbers can be stored. The second part is the stack. This stack can be accessed from anywhere in the program and it can also store signed integer numbers.
 ## Getting started
 The main file is ```interpreter.cpp```. To compile it execute ```g++ interpreter.cpp -o interpreter``` on the terminal. With the compiled to execute a ```.db``` file the fillowing structure has to be used.
 
